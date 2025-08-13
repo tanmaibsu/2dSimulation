@@ -60,8 +60,6 @@ def _testsim(args):
         if i%10 == 0:
             print("test sim...... frame",i)
         
-        
-        #fig = plt.figure()
         #plt.imshow(image1)
         #plt.show()
         
@@ -249,6 +247,9 @@ def _randomFluorListComp(N,nBit,box,effP,gridSize,randData):
     nnBit = nBit**2
     selectedBits = [-1.0]
     fluorList = np.zeros((N,4),)
+#@@@ these are interesting constants.  Are these based on the type of flourescent markers we have? Isn't this going to be impacted by integrationLength?
+#@@@ should these be entered as arguments?
+#@@@ for 3d name, do we need seperate numbers for these for each marker based on distance to quencher?
     photonsPerFluor = 9000
     photonCountStdev = 1750
     
@@ -265,6 +266,7 @@ def _randomFluorListComp(N,nBit,box,effP,gridSize,randData):
 
         fluorList[id,0] = x
         fluorList[id,1] = y
+#@@@ is wavelength the same for all of these?
         fluorList[id,2] = wavelength
         fluorList[id,3] = np.random.normal(photonsPerFluor,photonCountStdev)
         #fluorList[id,3] = np.random.poisson(photonsPerFluor,photonCountStdev)
@@ -277,9 +279,9 @@ def randomMovieList(args):
     # Read from the arguments
     N = args.N
     nPixels = args.pixels
-    box = args.box_side_length
+    box = args.box_side_length #@@@ what is this for?
     frames = args.frames
-    frameLength = args.integration_time
+    frameLength = args.integration_time #
     averageDuration = args.on_time
     grid = args.grid_size
     
@@ -292,7 +294,7 @@ def randomMovieList(args):
     pixelSize = args.pixel_size
     magnification = args.magnification
     
-    effP = pixelSize/magnification
+    effP = pixelSize/magnification # @@@ effP might mean "effective pixels"
     
     fluorCounts = [0 for i in range(frames)]
     
@@ -397,24 +399,37 @@ def _simulatePaintImageComp(nPixels,NA,effP,fluorList):
     nYPixels = nPixels
     print("<-------here------->")
     print(fluorList)
+#@@@ why is sigma 
     sigma = 0.45*fluorList[:,2]/1000/2/NA/effP
     print("<-------------->")
     sq2sigma = math.sqrt(2)*sigma
     print("<-------------->")
     
     image = np.zeros((nXPixels,nYPixels))
-    
+
+
+#@@@ For each flourescent marker
     for idx in range(fluorList.shape[0]):
         #sigma = 0.45*fluor[2]/1000/2/NA/effP
         #sq2sigma = math.sqrt(2)*sigma;
+#@@@ I get the x,y coordinates, width
+#@@@ sigma stores something based on wavelength of each fluor in the fluorList
+#@@@ currently it looks like wavelength is hard-coded to be the same for all fluors
+#@@@ fluorList[:,2] stores the wavelength for each fluor, but it is all the same values
+#@@@ so  sigma = 0.45*fluorList[:,2]/1000/2/NA/effP will store all the same values
+#@@@ why 5*sigma[idx])?
         w = int(round(5*sigma[idx]))
         x0 = int(math.floor(fluorList[idx,0]/effP))
         y0 = int(math.floor(fluorList[idx,1]/effP))
-        xl = max(0,x0-w)
+# @@@ might be bad to bound xl,xu,yl,yu at edge like we're doing below - I think this will mess with the distribution of photons for flourophores at the edge of the image frame.
+        xl = max(0,x0-w) 
         xu = min(nXPixels-1,x0+w)
         yl = max(0,y0-w)
         yu = min(nYPixels-1,y0+w)
-        
+       
+# @@@ Why are we setting NPhot outside the loop? This means it is constant for the entire loop?
+# @@@ fluorList[idx,3] is set to a random number: fluorList[id,3] = np.random.normal(photonsPerFluor,photonCountStdev)
+# @@@ maybe have an NPhot2, NPhot3, ... for each vertical flourphore/marker
         NPhot = np.random.normal(fluorList[idx,3])
         
         if xl<=xu and yl<=yu:
@@ -426,6 +441,7 @@ def _simulatePaintImageComp(nPixels,NA,effP,fluorList):
                     #yp = y[yl:yu,xl:xu] - fluor[1]*magnification
                     #r2 = xp**2 + yp**2
                     #image[yl:yu,xl:xu] += photonsPerFluor*np.exp(-r2/2/sigma**2)/2/math.pi/sigma
+#@@@ maybe this is the main line where you have to change this for 3dnam, basically you have this line repeated for each vertical axis flourophore/marker
                     image[yi,xi] = image[yi,xi] + NPhot/4*(np.math.erf((xp+.5)/sq2sigma[idx])-np.math.erf((xp-.5)/sq2sigma[idx]))*(np.math.erf((yp+.5)/sq2sigma[idx])-np.math.erf((yp-0.5)/sq2sigma[idx]))
                     
     return image
@@ -442,7 +458,8 @@ def _simulateImageNoiseComp(nPixels, image,gain,bias,readNoise):
             image[xi,yi] = min(maxInt,image[xi,yi])
             
     return image
-    
+
+# @@@ Need will to tell us all about each of these arguments
 if __name__ == '__main__':       
     # parsing the arguments
     testsim_parser = argparse.ArgumentParser(description="PAINT random image simulation script")
@@ -470,7 +487,10 @@ if __name__ == '__main__':
     testsim_parser.add_argument(
         "-N", "--N", type=int, default=50, help="number of fluorophores to simulate per frame"        
     )
-    # Constant number of fluorophores
+    # Constant number of fluorophore 
+    # @@@ is above comment correct? Seems like this is just background noise - the amount
+    # @@@ we generate.  But if so why is it a constant number?  Seems like it ought to have
+    # @@@ a gausian distribution around some value.
     testsim_parser.add_argument(
         "-bg", "--background", type=int, default=45, help="background photons"        
     )
