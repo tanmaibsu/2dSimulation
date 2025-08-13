@@ -249,7 +249,7 @@ def _randomFluorListComp(N,nBit,box,effP,gridSize,randData):
     fluorList = np.zeros((N,4),)
 #@@@ these are interesting constants.  Are these based on the type of flourescent markers we have? Isn't this going to be impacted by integrationLength?
 #@@@ should these be entered as arguments?
-#@@@ for 3d name, do we need seperate numbers for these for each marker based on distance to quencher?
+#@@@ for 3d nam, do we need seperate numbers for these for each marker based on distance to quencher?
     photonsPerFluor = 9000
     photonCountStdev = 1750
     
