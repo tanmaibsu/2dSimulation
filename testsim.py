@@ -281,7 +281,7 @@ def randomMovieList(args):
     nPixels = args.pixels
     box = args.box_side_length #@@@ what is this for?
     frames = args.frames
-    frameLength = args.integration_time #
+    frameLength = args.integration_time #@@@
     averageDuration = args.on_time
     grid = args.grid_size
     
@@ -356,6 +356,7 @@ def simulatePaintImage(fluorList,args):
     
     pixelSize = args.pixel_size
     magnification = args.magnification
+    #@@@ why were these following lines commented out?
     #photonsPerFluor = 9000
     #photonCountStdev = 1750
     
